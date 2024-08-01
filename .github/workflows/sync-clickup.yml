@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with Actions
+
+name: SyncClickup
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "staging" branch
+  pull_request:
+    types: [opened, edited]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  sync-clickup:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Runs a single command using the runners shell
+      - name: Check ClickUp Task Link
+        run: |
+          if ! echo "$BODY" | grep -Eq 'https://app.clickup.com/t/[0-9a-zA-Z_-]+'; then
+            echo "Error: ClickUp task link is missing."
+            exit 1
+          fi
+        env:
+          clickup_task_id: Mona
+
+      - name: Check PR labels
+        id: label-check
+        uses: potaesm/github-actions-request@1.0.7
+        with:
+          url: /task
+          method: post
+          baseURL: https://api.clickup.com/api/v2/
+          headers: '{ "Content-Type": "application/json" }'
+          params: '{ "ID": 12345 }'
+          data: '{ "value": "www.google.com" }'
+          timeout: 3000
+          auth: '{ "Authorization": ${{ secrets.CLICKUP_TOKEN }} }'
